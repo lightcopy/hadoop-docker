@@ -27,21 +27,22 @@ ENV YARN_HOME=$HADOOP_INSTALL
 ENV HADOOP_COMMON_LIB_NATIVE_DIR=$HADOOP_INSTALL/lib/native
 ENV HADOOP_OPTS="-Djava.library.path=$HADOOP_INSTALL/lib"
 
-# format hadoop file system
-RUN hdfs namenode -format
-
-# copy all necessary files for running HDFS
-ADD bootstrap.sh /etc/bootstrap.sh
-RUN chown root:root /etc/bootstrap.sh
-RUN chmod 700 /etc/bootstrap.sh
-ADD core-site.xml.template $HADOOP_HOME/etc/hadoop/core-site.xml.template
-RUN sed -i "/^export JAVA_HOME/ s:.*:export JAVA_HOME=$JAVA_HOME:" $HADOOP_HOME/etc/hadoop/hadoop-env.sh
-
 # set up passwordless ssh
 RUN mkdir /var/run/sshd
 RUN ssh-keygen -f ~/.ssh/id_rsa -t rsa -N ''
 RUN cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
 ADD ssh_config /etc/ssh/ssh_config
+
+# copy all necessary files for running HDFS
+ADD core-site.xml.template $HADOOP_HOME/etc/hadoop/core-site.xml.template
+RUN sed -i "/^export JAVA_HOME/ s:.*:export JAVA_HOME=$JAVA_HOME:" $HADOOP_HOME/etc/hadoop/hadoop-env.sh
+ADD hdfs-site.xml $HADOOP_HOME/etc/hadoop/hdfs-site.xml
+ADD bootstrap.sh /etc/bootstrap.sh
+RUN chown root:root /etc/bootstrap.sh
+RUN chmod 700 /etc/bootstrap.sh
+
+# format hadoop file system
+RUN hdfs namenode -format
 
 # HDFS ports
 EXPOSE 50010 50020 50070 50075 50090 8020 9000
